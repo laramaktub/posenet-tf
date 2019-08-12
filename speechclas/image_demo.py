@@ -8,6 +8,8 @@ from speechclas.model import load_model
 from speechclas.utils import read_imgfile, draw_skel_and_kp
 from speechclas.decode_multi import decode_multiple_poses
 from speechclas.constants import PART_NAMES
+import json
+import base64
 
 
 
@@ -17,6 +19,9 @@ image_dir= "images"
 model=101
 
 def posenet_image():
+
+    dictoutput= []
+
 
     with tf.Session() as sess:
         model_cfg, model_outputs = load_model(model, sess)
@@ -54,10 +59,12 @@ def posenet_image():
                 draw_image = draw_skel_and_kp(
                     draw_image, pose_scores, keypoint_scores, keypoint_coords,
                     min_pose_score=0.25, min_part_score=0.25)
-
-                cv2.imwrite(os.path.join(output_dir, os.path.relpath(f, image_dir)), draw_image)
+                imgpath=os.path.join(output_dir, os.path.relpath(f, image_dir))
+                cv2.imwrite(imgpath, draw_image)
+                print(imgpath)
 
             if True:
+                imgdict = {"output": imgpath}
                 print()
                 print("Results for image: %s" % f)
                 for pi in range(len(pose_scores)):
@@ -66,7 +73,9 @@ def posenet_image():
                     print('Pose #%d, score = %f' % (pi, pose_scores[pi]))
                     for ki, (s, c) in enumerate(zip(keypoint_scores[pi, :], keypoint_coords[pi, :, :])):
                         print('Keypoint %s, score = %f, coord = %s' % (PART_NAMES[ki], s, c))
+                        imgdict[PART_NAMES[ki]] = (s,c)
+            dictoutput.append(imgdict)
+    print('Average FPS:', len(filenames) / (time.time() - start))
+    return dictoutput
 
-        print('Average FPS:', len(filenames) / (time.time() - start))
-
-
+print(posenet_image())

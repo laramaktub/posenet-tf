@@ -83,4 +83,6 @@ def posenet_image():
     return dictoutput
 
 x=posenet_image()
+print("x 0  ---> ", x[0]["output"])
 jsonData=json.dumps(x)
+

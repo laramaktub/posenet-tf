@@ -1,0 +1,3 @@
+[deepaas.model]
+speechclas = speechclas.api
+

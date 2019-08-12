@@ -73,9 +73,14 @@ def posenet_image():
                     print('Pose #%d, score = %f' % (pi, pose_scores[pi]))
                     for ki, (s, c) in enumerate(zip(keypoint_scores[pi, :], keypoint_coords[pi, :, :])):
                         print('Keypoint %s, score = %f, coord = %s' % (PART_NAMES[ki], s, c))
-                        imgdict[PART_NAMES[ki]] = (s,c)
+                        imgdict["score"]= s
+                        imgdict["x"]=c[0]
+                        imgdict["y"]=c[1]
+
             dictoutput.append(imgdict)
     print('Average FPS:', len(filenames) / (time.time() - start))
+    print(dictoutput)
     return dictoutput
 
-print(posenet_image())
+x=posenet_image()
+jsonData=json.dumps(x)

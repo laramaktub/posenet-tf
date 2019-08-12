@@ -4,7 +4,7 @@ import time
 import argparse
 import os
 
-import posenet
+from speechclas import posenet
 
 
 parser = argparse.ArgumentParser()
@@ -57,7 +57,7 @@ def main():
 
                 cv2.imwrite(os.path.join(args.output_dir, os.path.relpath(f, args.image_dir)), draw_image)
 
-            if not args.notxt:
+            if True:
                 print()
                 print("Results for image: %s" % f)
                 for pi in range(len(pose_scores)):

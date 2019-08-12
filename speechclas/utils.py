@@ -1,160 +1,101 @@
-"""
-Miscellaneous utils
-
-Date: September 2018
-Author: Ignacio Heredia
-Email: iheredia@ifca.unican.es
-Github: ignacioheredia
-"""
-
-import os
-import subprocess
-from distutils.dir_util import copy_tree
-from multiprocessing import Process
-
+import cv2
 import numpy as np
-from tensorflow.keras import callbacks
-from tensorflow.keras import backend as K
 
-from speechclas import paths
-#from speechclas.optimizers import customSGD, customAdam, customAdamW
+import posenet.constants
 
 
-def create_dir_tree():
-    """
-    Create directory tree structure
-    """
-    dirs = paths.get_dirs()
-    for d in dirs.values():
-        if not os.path.isdir(d):
-            print('creating {}'.format(d))
-            os.makedirs(d)
+def valid_resolution(width, height, output_stride=16):
+    target_width = (int(width) // output_stride) * output_stride + 1
+    target_height = (int(height) // output_stride) * output_stride + 1
+    return target_width, target_height
 
 
-def remove_empty_dirs():
-    basedir = paths.get_base_dir()
-    dirs = os.listdir(basedir)
-    for d in dirs:
-        d_path = os.path.join(basedir, d)
-        if not os.listdir(d_path):
-            os.rmdir(d_path)
+def _process_input(source_img, scale_factor=1.0, output_stride=16):
+    target_width, target_height = valid_resolution(
+        source_img.shape[1] * scale_factor, source_img.shape[0] * scale_factor, output_stride=output_stride)
+    scale = np.array([source_img.shape[0] / target_height, source_img.shape[1] / target_width])
+
+    input_img = cv2.resize(source_img, (target_width, target_height), interpolation=cv2.INTER_LINEAR)
+    input_img = cv2.cvtColor(input_img, cv2.COLOR_BGR2RGB).astype(np.float32)
+    input_img = input_img * (2.0 / 255.0) - 1.0
+    input_img = input_img.reshape(1, target_height, target_width, 3)
+    return input_img, source_img, scale
 
 
-def backup_splits():
-    """
-    Save the data splits used during training to the timestamped dir.
-    """
-    src = paths.get_splits_dir()
-    dst = paths.get_ts_splits_dir()
-    copy_tree(src, dst)
+def read_cap(cap, scale_factor=1.0, output_stride=16):
+    res, img = cap.read()
+    if not res:
+        raise IOError("webcam failure")
+    return _process_input(img, scale_factor, output_stride)
 
 
-def get_custom_objects():
-    return {'customSGD': customSGD,
-            'customAdam': customAdam,
-            'customAdamW': customAdamW}
+def read_imgfile(path, scale_factor=1.0, output_stride=16):
+    img = cv2.imread(path)
+    return _process_input(img, scale_factor, output_stride)
 
 
-class LR_scheduler(callbacks.LearningRateScheduler):
-    """
-    Custom callback to decay the learning rate. Schedule follows a 'step' decay.
-
-    Reference
-    ---------
-    https://github.com/keras-team/keras/issues/898#issuecomment-285995644
-    """
-    def __init__(self, lr_decay=0.1, epoch_milestones=[]):
-        self.lr_decay = lr_decay
-        self.epoch_milestones = epoch_milestones
-        super().__init__(schedule=self.schedule)
-
-    def schedule(self, epoch):
-        current_lr = K.eval(self.model.optimizer.lr)
-        if epoch in self.epoch_milestones:
-            new_lr = current_lr * self.lr_decay
-            print('Decaying the learning rate to {}'.format(new_lr))
-        else:
-            new_lr = current_lr
-        return new_lr
+def draw_keypoints(
+        img, instance_scores, keypoint_scores, keypoint_coords,
+        min_pose_confidence=0.5, min_part_confidence=0.5):
+    cv_keypoints = []
+    for ii, score in enumerate(instance_scores):
+        if score < min_pose_confidence:
+            continue
+        for ks, kc in zip(keypoint_scores[ii, :], keypoint_coords[ii, :, :]):
+            if ks < min_part_confidence:
+                continue
+            cv_keypoints.append(cv2.KeyPoint(kc[1], kc[0], 10. * ks))
+    out_img = cv2.drawKeypoints(img, cv_keypoints, outImage=np.array([]))
+    return out_img
 
 
-class LRHistory(callbacks.Callback):
-    """
-    Custom callback to save the learning rate history
-
-    Reference
-    ---------
-    https://stackoverflow.com/questions/49127214/keras-how-to-output-learning-rate-onto-tensorboard
-    """
-    def __init__(self):  # add other arguments to __init__ if needed
-        super().__init__()
-
-    def on_epoch_end(self, epoch, logs=None):
-        logs.update({'lr': K.eval(self.model.optimizer.lr).astype(np.float64)})
-        super().on_epoch_end(epoch, logs)
+def get_adjacent_keypoints(keypoint_scores, keypoint_coords, min_confidence=0.1):
+    results = []
+    for left, right in posenet.CONNECTED_PART_INDICES:
+        if keypoint_scores[left] < min_confidence or keypoint_scores[right] < min_confidence:
+            continue
+        results.append(
+            np.array([keypoint_coords[left][::-1], keypoint_coords[right][::-1]]).astype(np.int32),
+        )
+    return results
 
 
-def launch_tensorboard(port=6006):
-    subprocess.call(['tensorboard',
-                     '--logdir', '{}'.format(paths.get_logs_dir()),
-                     '--port', '{}'.format(port),
-                     '--host', '0.0.0.0'])
+def draw_skeleton(
+        img, instance_scores, keypoint_scores, keypoint_coords,
+        min_pose_confidence=0.5, min_part_confidence=0.5):
+    out_img = img
+    adjacent_keypoints = []
+    for ii, score in enumerate(instance_scores):
+        if score < min_pose_confidence:
+            continue
+        new_keypoints = get_adjacent_keypoints(
+            keypoint_scores[ii, :], keypoint_coords[ii, :, :], min_part_confidence)
+        adjacent_keypoints.extend(new_keypoints)
+    out_img = cv2.polylines(out_img, adjacent_keypoints, isClosed=False, color=(255, 255, 0))
+    return out_img
 
 
-def get_callbacks(CONF, use_lr_decay=True):
-    """
-    Get a callback list to feed fit_generator.
-    #TODO Use_remote callback needs proper configuration
-    #TODO Add ReduceLROnPlateau callback?
+def draw_skel_and_kp(
+        img, instance_scores, keypoint_scores, keypoint_coords,
+        min_pose_score=0.5, min_part_score=0.5):
+    out_img = img
+    adjacent_keypoints = []
+    cv_keypoints = []
+    for ii, score in enumerate(instance_scores):
+        if score < min_pose_score:
+            continue
 
-    Parameters
-    ----------
-    CONF: dict
+        new_keypoints = get_adjacent_keypoints(
+            keypoint_scores[ii, :], keypoint_coords[ii, :, :], min_part_score)
+        adjacent_keypoints.extend(new_keypoints)
 
-    Returns
-    -------
-    List of callbacks
-    """
+        for ks, kc in zip(keypoint_scores[ii, :], keypoint_coords[ii, :, :]):
+            if ks < min_part_score:
+                continue
+            cv_keypoints.append(cv2.KeyPoint(kc[1], kc[0], 10. * ks))
 
-    calls = []
-
-    # Add mandatory callbacks
-    calls.append(callbacks.TerminateOnNaN())
-    calls.append(LRHistory())
-
-    # Add optional callbacks
-    if use_lr_decay:
-        milestones = np.array(CONF['training']['lr_step_schedule']) * CONF['training']['epochs']
-        milestones = milestones.astype(np.int)
-        calls.append(LR_scheduler(lr_decay=CONF['training']['lr_step_decay'],
-                                  epoch_milestones=milestones.tolist()))
-
-    if CONF['monitor']['use_tensorboard']:
-        calls.append(callbacks.TensorBoard(log_dir=paths.get_logs_dir(), write_graph=False))
-
-        # # Let the user launch Tensorboard
-        # print('Monitor your training in Tensorboard by executing the following comand on your console:')
-        # print('    tensorboard --logdir={}'.format(paths.get_logs_dir()))
-        # Run Tensorboard  on a separate Thread/Process on behalf of the user
-        port = os.getenv('monitorPORT', 6006)
-        port = int(port) if len(str(port)) >= 4 else 6006
-        subprocess.run(['fuser', '-k', '{}/tcp'.format(port)]) # kill any previous process in that port
-        p = Process(target=launch_tensorboard, args=(port,), daemon=True)
-        p.start()
-
-    if CONF['monitor']['use_remote']:
-        calls.append(callbacks.RemoteMonitor())
-
-    if CONF['training']['use_validation'] and CONF['training']['use_early_stopping']:
-        calls.append(callbacks.EarlyStopping(patience=int(0.1 * CONF['training']['epochs'])))
-
-    if CONF['training']['ckpt_freq'] is not None:
-        calls.append(callbacks.ModelCheckpoint(
-            os.path.join(paths.get_checkpoints_dir(), 'epoch-{epoch:02d}.hdf5'),
-            verbose=1,
-            period=max(1, int(CONF['training']['ckpt_freq'] * CONF['training']['epochs']))))
-
-    if not calls:
-        calls = None
-
-    return calls
+    out_img = cv2.drawKeypoints(
+        out_img, cv_keypoints, outImage=np.array([]), color=(255, 255, 0),
+        flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+    out_img = cv2.polylines(out_img, adjacent_keypoints, isClosed=False, color=(255, 255, 0))
+    return out_img

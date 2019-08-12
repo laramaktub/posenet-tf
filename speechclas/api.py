@@ -216,7 +216,7 @@ def predict_data(images, merge=True):
         thename=image['files'].filename
         thefile="images/"+thename
         image['files'].save(thefile)
-
+    print("LLega hasta aqui")
     image_demo
 
     #pred_lab, pred_prob =label_wav.predict(thefile, LABELS_FILE, MODEL_NAME, "wav_data:0","labels_softmax:0", 3)

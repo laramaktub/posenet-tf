@@ -1,7 +1,7 @@
 import tensorflow as tf
 import os
-from speechclas.converter import *
-
+import speechclas.converter.config
+import speechclas
 
 MODEL_DIR = './_models'
 DEBUG_OUTPUT = False
@@ -21,7 +21,7 @@ def model_id_to_ord(model_id):
 
 
 def load_config(model_ord):
-    converter_cfg = posenet.converter.config.load_config()
+    converter_cfg = speechclas.converter.config.load_config()
     checkpoints = converter_cfg['checkpoints']
     output_stride = converter_cfg['outputStride']
     checkpoint_name = checkpoints[model_ord]
@@ -39,7 +39,7 @@ def load_model(model_id, sess, model_dir=MODEL_DIR):
     model_path = os.path.join(model_dir, 'model-%s.pb' % model_cfg['checkpoint_name'])
     if not os.path.exists(model_path):
         print('Cannot find model file %s, converting from tfjs...' % model_path)
-        from posenet.converter.tfjs2python import convert
+        from speechclas.converter.tfjs2python import convert
         convert(model_ord, model_dir, check=False)
         assert os.path.exists(model_path)
 

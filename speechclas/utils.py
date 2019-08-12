@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 
 from speechclas import constants
-
+from speechclas.constants import CONNECTED_PART_INDICES
 
 def valid_resolution(width, height, output_stride=16):
     target_width = (int(width) // output_stride) * output_stride + 1
@@ -51,7 +51,7 @@ def draw_keypoints(
 
 def get_adjacent_keypoints(keypoint_scores, keypoint_coords, min_confidence=0.1):
     results = []
-    for left, right in posenet.CONNECTED_PART_INDICES:
+    for left, right in CONNECTED_PART_INDICES:
         if keypoint_scores[left] < min_confidence or keypoint_scores[right] < min_confidence:
             continue
         results.append(

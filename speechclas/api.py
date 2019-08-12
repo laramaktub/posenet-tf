@@ -34,10 +34,11 @@ import tensorflow as tf
 from tensorflow.keras.models import load_model
 from tensorflow.keras import backend as K
 
-from speechclas import paths, utils, config, label_wav, image_demo
+from speechclas import paths, utils, config, label_wav
 from speechclas.data_utils import load_class_names, load_class_info, mount_nextcloud
 from speechclas.test_utils import predict
 from speechclas.train_runfile import train_fn
+from speechclas.image_demo import posenet_image
 
 # Mount NextCloud folders (if NextCloud is available)
 try:
@@ -217,7 +218,7 @@ def predict_data(images, merge=True):
         thefile="images/"+thename
         image['files'].save(thefile)
     print("LLega hasta aqui")
-    image_demo
+    posenet_image
 
     #pred_lab, pred_prob =label_wav.predict(thefile, LABELS_FILE, MODEL_NAME, "wav_data:0","labels_softmax:0", 3)
     return 1

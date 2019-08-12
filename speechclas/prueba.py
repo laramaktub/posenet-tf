@@ -1,4 +1,4 @@
-from speechclas import image_demo
+from speechclas.image_demo import main
 
 
-image_demo
+main()

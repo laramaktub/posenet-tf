@@ -16,7 +16,7 @@ scale_factor=1.0
 image_dir= "images"
 model=101
 
-def main():
+def posenet_image():
 
     with tf.Session() as sess:
         model_cfg, model_outputs = load_model(model, sess)
@@ -70,5 +70,3 @@ def main():
         print('Average FPS:', len(filenames) / (time.time() - start))
 
 
-if __name__ == "__main__":
-    main()

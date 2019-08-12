@@ -1,5 +1,5 @@
-from posenet.decode import *
-from posenet.constants import *
+from speechclas.decode import *
+from speechclas.constants import *
 import time
 import scipy.ndimage as ndi
 

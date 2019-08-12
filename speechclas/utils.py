@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-import posenet.constants
+from speechclas import constants
 
 
 def valid_resolution(width, height, output_stride=16):

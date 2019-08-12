@@ -1,6 +1,7 @@
 import tensorflow as tf
 import os
-import posenet.converter.config
+from speechclas.converter import *
+
 
 MODEL_DIR = './_models'
 DEBUG_OUTPUT = False

@@ -186,7 +186,9 @@ def format_prediction(labels):
                 pred={
                 thekey:label[thekey]
                 }
-            d["predictions"].append(pred)
+                d["predictions"].append(pred)
+
+
     return d
 
 

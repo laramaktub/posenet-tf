@@ -4,7 +4,7 @@ import json
 import zlib
 import os
 
-from posenet.converter.config import load_config
+from speechclas.converter.config import load_config
 
 CFG = load_config()
 GOOGLE_CLOUD_STORAGE_DIR = CFG['GOOGLE_CLOUD_STORAGE_DIR']

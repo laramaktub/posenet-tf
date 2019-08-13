@@ -7,7 +7,7 @@ import numpy as np
 import os
 import tempfile
 
-from posenet.converter.config import load_config
+from speechclas.converter.config import load_config
 
 BASE_DIR = os.path.join(tempfile.gettempdir(), '_posenet_weights')
 

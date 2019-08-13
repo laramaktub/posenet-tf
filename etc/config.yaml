@@ -26,7 +26,7 @@ general:
 
 
   data_dir:
-    value: "data/dataset_files"
+    value: "data/output"
     type: "str"
     help: >
           Base directory for images. If the path is relative, it will be appended to the package path.

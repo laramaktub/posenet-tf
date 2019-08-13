@@ -56,7 +56,7 @@ pip install -e .
     ├── test-requirements.txt  <- The requirements file for the test environment
     │
     ├── setup.py               <- makes project pip installable (pip install -e .) so imgclas can be imported
-    ├── speechclas    <- Source code for use in this project.
+    ├── posenetclas    <- Source code for use in this project.
     │   ├── __init__.py        <- Makes imgclas a Python module
     │   │
     │   ├── dataset            <- Scripts to download or generate data
@@ -133,7 +133,7 @@ pip install -e .
 ```
 
 and run `deepaas-run --listen-ip 0.0.0.0`.
-From there you will be able to run training and predictions of this package  using `model_name=speechclas`.
+From there you will be able to run training and predictions of this package  using `model_name=posenetclas`.
 
 <img src="./reports/figures/deepaas.png" alt="deepaas" width="1000"/>
 

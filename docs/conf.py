@@ -164,7 +164,7 @@ html_static_path = ['_static']
 # html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'speechclasdoc'
+htmlhelp_basename = 'posenetclasdoc'
 
 
 # -- Options for LaTeX output --------------------------------------------------
@@ -184,7 +184,7 @@ latex_elements = {
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
     ('index',
-     'speechclas.tex',
+     'posenetclas.tex',
      u'DEEP-OC-speech-to-text-tf on Documentation',
      u"Lara Lloret Iglesias (CSIC)", 'manual'),
 ]
@@ -215,7 +215,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'speechclas', u'DEEP-OC-image-classification Documentation',
+    ('index', 'posenetclas', u'DEEP-OC-image-classification Documentation',
      [u"Lara Lloret Iglesias (CSIC)"], 1)
 ]
 
@@ -229,7 +229,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    ('index', 'speechclas', u'DEEP-OC-speech-to-text-tf Documentation',
+    ('index', 'posenetclas', u'DEEP-OC-speech-to-text-tf Documentation',
      u"Lara Lloret Iglesias (CSIC)", 'DEEP-OC-speech-to-text-tf',
      'This is a plug-and-play tool to train and evaluate a speech to text model using deep neural networks.', 'Miscellaneous'),
 ]

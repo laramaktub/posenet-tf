@@ -44,8 +44,7 @@ CONF = config.conf_dict()
 
 # Mount NextCloud folders (if NextCloud is available)
 try:
-    mount_nextcloud('ncplants:/data/dataset_files', paths.get_splits_dir())
-    mount_nextcloud('ncplants:/data/images', paths.get_image_dir())
+    mount_nextcloud('ncplants:/data/output', paths.get_base_dir())
     #mount_nextcloud('ncplants:/models', paths.get_models_dir())
 except Exception as e:
     print(e)
@@ -133,21 +132,16 @@ def predict_url(urls, merge=True):
 def predict_file(filenames, merge=True):
     """
     Function to predict a local image
+
     """
+
+    timestamp = datetime.now().strftime('%Y-%m-%d_%H%M%S')
+    timestamp_folder="/tmp/"+timestamp+"/"
+
     catch_localfile_error(filenames)
 
-    with graph.as_default():
-        pred_lab, pred_prob = predict(model=model,
-                                      X=filenames,
-                                      conf=conf,
-                                      top_K=top_K,
-                                      filemode='local',
-                                      merge=merge)
+    return format_prediction(image_demo.posenet_image(timestamp))
 
-    if merge:
-        pred_lab, pred_prob = np.squeeze(pred_lab), np.squeeze(pred_prob)
-
-    return format_prediction(pred_lab, pred_prob)
 
 
 @catch_error
@@ -172,7 +166,6 @@ def predict_data(images, merge=True):
         thefile=timestamp_folder+thename
         image['files'].save(thefile)
 
-    image_demo.posenet_image(timestamp)
 
     return format_prediction(image_demo.posenet_image(timestamp))
 
@@ -188,12 +181,12 @@ def format_prediction(labels):
             "predictions": [],
         }
 
-        for thekey in sorted(label):
+        for thekey in label:
             if thekey!="output":
                 pred={
                 thekey:label[thekey]
                 }
-                d["predictions"].append(pred)
+            d["predictions"].append(pred)
     return d
 
 

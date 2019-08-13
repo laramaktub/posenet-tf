@@ -38,6 +38,8 @@ def get_image_dir():
         return os.path.abspath(os.path.join(homedir, img_dir))
 
 
+
+
 def get_image_url():
     image_url = CONF['general']['data_url']
     return image_url

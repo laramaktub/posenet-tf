@@ -10,7 +10,7 @@ from speechclas.decode_multi import decode_multiple_poses
 from speechclas.constants import PART_NAMES
 import json
 import base64
-
+from speechclas import paths
 
 
 
@@ -20,7 +20,7 @@ def posenet_image(timestamp):
     scale_factor=1.0
     model=101
     image_dir="/tmp/"+timestamp+"/"
-    output_dir="output/"+timestamp+"/"
+    output_dir=os.path.join(paths.get_image_dir(),timestamp+"/")
     dictoutput= []
 
     with tf.Session() as sess:
@@ -61,7 +61,6 @@ def posenet_image(timestamp):
                     min_pose_score=0.25, min_part_score=0.25)
                 imgpath=os.path.join(output_dir, os.path.relpath(f, image_dir))
                 cv2.imwrite(imgpath, draw_image)
-                print(imgpath)
 
             if True:
                 imgdict = {"output": imgpath}
@@ -74,7 +73,7 @@ def posenet_image(timestamp):
                     for ki, (s, c) in enumerate(zip(keypoint_scores[pi, :], keypoint_coords[pi, :, :])):
                         print('Keypoint %s, score = %f, coord = %s' % (PART_NAMES[ki], s, c))
                         imgdict[PART_NAMES[ki]]={ "coordinate_x": c[0], "coordinate_y": c[1], "score":s}
-
+            
             dictoutput.append(imgdict)
     print('Average FPS:', len(filenames) / (time.time() - start))
     return dictoutput

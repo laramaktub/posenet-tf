@@ -123,9 +123,9 @@ def predict_url(urls, merge=True):
     imagename=os.path.basename(urls['urls'][0])
     urllib.request.urlretrieve(urls['urls'][0], '/tmp/'+timestamp+"/"+imagename)
     
-    image_demo.posenet_image(timestamp)
+    return format_prediction(image_demo.posenet_image(timestamp))
 
-    return 1
+    
 
 
 
@@ -174,26 +174,28 @@ def predict_data(images, merge=True):
 
     image_demo.posenet_image(timestamp)
 
-    #pred_lab, pred_prob =label_wav.predict(thefile, LABELS_FILE, MODEL_NAME, "wav_data:0","labels_softmax:0", 3)
-    return 1
+    return format_prediction(image_demo.posenet_image(timestamp))
 
 
 
-def format_prediction(labels, probabilities):
+def format_prediction(labels):
     d = {
         "status": "ok",
          "predictions": [],
     }
-    class_names=conf["model_settings"]["wanted_words"]
-    for label_id, prob in zip(labels, probabilities):
-        name = label_id
 
-        pred = {
-            "label": name,
-            "probability": float(prob)
-            }
+    print(labels[0]["output"])
+    
+#    class_names=conf["model_settings"]["wanted_words"]
+ #   for label_id, prob in zip(labels, probabilities):
+  #      name = label_id
+
+   #     pred = {
+    #        "label": name,
+     #       "probability": float(prob)
+      #      }
         
-        d["predictions"].append(pred)
+       # d["predictions"].append(pred)
     return d
 
 

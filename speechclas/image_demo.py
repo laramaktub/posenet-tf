@@ -79,10 +79,6 @@ def posenet_image(timestamp):
 
             dictoutput.append(imgdict)
     print('Average FPS:', len(filenames) / (time.time() - start))
-    print(dictoutput)
     return dictoutput
 
-#x=posenet_image()
-#print("x 0  ---> ", x[0]["output"])
-#jsonData=json.dumps(x)
 

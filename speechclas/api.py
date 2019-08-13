@@ -37,7 +37,6 @@ from tensorflow.keras import backend as K
 from speechclas import paths, utils, config, label_wav
 from speechclas.data_utils import load_class_names, load_class_info, mount_nextcloud
 from speechclas.test_utils import predict
-from speechclas.train_runfile import train_fn
 from speechclas import image_demo
 
 CONF = config.conf_dict()
@@ -113,9 +112,10 @@ def predict_url(urls, merge=True):
     """
     catch_url_error(urls)
 
-    urllib.request.urlretrieve(urls['urls'][0], '/tmp/file.wav')
-    pred_lab, pred_prob =label_wav.predict('/tmp/file.wav', LABELS_FILE, MODEL_NAME, "wav_data:0","labels_softmax:0", 3)
-    return format_prediction(pred_lab, pred_prob)
+    urllib.request.urlretrieve(urls['urls'][0], '/tmp/image')
+
+
+    return 1
 
 
 
@@ -217,81 +217,6 @@ def metadata():
     return d
 
 
-@catch_error
-def train(user_conf):
-    """
-    Parameters
-    ----------
-    user_conf : dict
-        Json dict (created with json.dumps) with the user's configuration parameters that will replace the defaults.
-        Must be loaded with json.loads()
-        For example:
-            user_conf={'num_classes': 'null', 'lr_step_decay': '0.1', 'lr_step_schedule': '[0.7, 0.9]', 'use_early_stopping': 'false'}
-    """
-    CONF = config.CONF
-
-    # Update the conf with the user input
-    for group, val in sorted(CONF.items()):
-        for g_key, g_val in sorted(val.items()):
-            g_val['value'] = json.loads(user_conf[g_key])
-
-    # Check the configuration
-    try:
-        config.check_conf(conf=CONF)
-    except Exception as e:
-        raise BadRequest(e)
-
-    CONF = config.conf_dict(conf=CONF)
-    timestamp = datetime.now().strftime('%Y-%m-%d_%H%M%S')
-
-    config.print_conf_table(CONF)
-    K.clear_session() # remove the model loaded for prediction
-    train_fn(TIMESTAMP=timestamp, CONF=CONF)
-    
-    # Sync with NextCloud folders (if NextCloud is available)
-    try:
-        mount_nextcloud(paths.get_models_dir(), 'ncplants:/models')
-    except Exception as e:
-        print(e)    
-
-
-@catch_error
-def get_train_args():
-    """
-    Returns a dict of dicts with the following structure to feed the deepaas API parser:
-    { 'arg1' : {'default': '1',     #value must be a string (use json.dumps to convert Python objects)
-                'help': '',         #can be an empty string
-                'required': False   #bool
-                },
-      'arg2' : {...
-                },
-    ...
-    }
-    """
-    train_args = {}
-    default_conf = config.CONF
-    for group, val in default_conf.items():
-        for g_key, g_val in val.items():
-            gg_keys = g_val.keys()
-
-            # Load optional keys
-            help = g_val['help'] if ('help' in gg_keys) else ''
-            type = getattr(builtins, g_val['type']) if ('type' in gg_keys) else None
-            choices = g_val['choices'] if ('choices' in gg_keys) else None
-
-            # Additional info in help string
-            help += '\n' + "Group name: **{}**".format(str(group))
-            if choices: help += '\n' + "Choices: {}".format(str(choices))
-            if type: help += '\n' + "Type: {}".format(g_val['type'])
-
-            opt_args = {'default': json.dumps(g_val['value']),
-                        'help': help,
-                        'required': False}
-            # if type: opt_args['type'] = type # this breaks the submission because the json-dumping
-            #                                     => I'll type-check args inside the train_fn
-
-            train_args[g_key] = opt_args
-    return train_args
 
 
 @catch_error

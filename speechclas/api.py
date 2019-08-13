@@ -60,69 +60,6 @@ allowed_extensions = set(['wav']) # allow only certain file extensions
 top_K = 5  # number of top classes predictions to return
 
 
-def load_inference_model():
-    """
-    Load a model for prediction.
-
-    If several timestamps are available in `./models` it will load `.models/api` or the last timestamp if `api` is not
-    available.
-    If several checkpoints are available in `./models/[timestamp]/ckpts` it will load
-    `.models/[timestamp]/ckpts/final_model.h5` or the last checkpoint if `final_model.h5` is not available.
-    """
-    global loaded, conf, MODEL_NAME, LABELS_FILE
-
-    # Set the timestamp
-    timestamps = next(os.walk(paths.get_models_dir()))[1]
-    if not timestamps:
-        raise BadRequest(
-            """You have no models in your `./models` folder to be used for inference.
-            Therefore the API can only be used for training.""")
-    else:
-        if 'api' in timestamps:
-            TIMESTAMP = 'api'
-        else:
-            TIMESTAMP = sorted(timestamps)[-1]
-        paths.timestamp = TIMESTAMP
-        print('Using TIMESTAMP={}'.format(TIMESTAMP))
-
-
-        # Set the checkpoint model to use to make the prediction
-        ckpts = os.listdir(paths.get_checkpoints_dir())
-        if not ckpts:
-            raise BadRequest(
-                """You have no checkpoints in your `./models/{}/ckpts` folder to be used for inference.
-                Therefore the API can only be used for training.""".format(TIMESTAMP))
-        else:
-            if 'model.pb' in ckpts:
-                MODEL_NAME = 'model.pb'
-            else:
-                MODEL_NAME = sorted([name for name in ckpts if name.endswith('*.pb')])[-1]
-            print('Using MODEL_NAME={}'.format(MODEL_NAME))
-
-            if 'conv_labels.txt' in ckpts:
-                LABELS_FILE = 'conv_labels.txt'
-            else:
-                LABELS_FILE = sorted([name for name in ckpts if name.endswith('*.txt')])[-1]
-            print('Using LABELS_FILE={}'.format(LABELS_FILE))
-
-
-            # Clear the previous loaded model
-            K.clear_session()
-
-            # Load the class names and info
-            ckpts_dir = paths.get_checkpoints_dir()
-            MODEL_NAME=  os.path.join(ckpts_dir, MODEL_NAME )
-            LABELS_FILE=  os.path.join(ckpts_dir, LABELS_FILE )
-            
-
-            # Load training configuration
-            conf_path = os.path.join(paths.get_conf_dir(), 'conf.json')
-            with open(conf_path) as f:
-                conf = json.load(f)
-
-
-    # Set the model as loaded
-    loaded = True
 
 
 def catch_error(f):
@@ -176,8 +113,6 @@ def predict_url(urls, merge=True):
     """
     catch_url_error(urls)
 
-    if not loaded:
-        load_inference_model()
     urllib.request.urlretrieve(urls['urls'][0], '/tmp/file.wav')
     pred_lab, pred_prob =label_wav.predict('/tmp/file.wav', LABELS_FILE, MODEL_NAME, "wav_data:0","labels_softmax:0", 3)
     return format_prediction(pred_lab, pred_prob)
@@ -191,8 +126,6 @@ def predict_file(filenames, merge=True):
     """
     catch_localfile_error(filenames)
 
-    if not loaded:
-        load_inference_model()
     with graph.as_default():
         pred_lab, pred_prob = predict(model=model,
                                       X=filenames,
@@ -213,7 +146,8 @@ def predict_data(images, merge=True):
     Function to predict an image file
     """
     timestamp = datetime.now().strftime('%Y-%m-%d_%H%M%S')
-    timestamp_folder=os.path.join("images",timestamp,"/")
+    timestamp_folder="/tmp/"+timestamp+"/"
+
     try:
         os.stat(timestamp_folder)
     except:

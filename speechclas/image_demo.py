@@ -19,10 +19,9 @@ def posenet_image(timestamp):
 
     scale_factor=1.0
     model=101
-    image_dir=os.path.join("images",timestamp,"/")
-    output_dir=os.path.join("output",timestamp,"/")
+    image_dir="/tmp/"+timestamp+"/"
+    output_dir="output/"+timestamp+"/"
     dictoutput= []
-    print(output_dir)
 
     with tf.Session() as sess:
         model_cfg, model_outputs = load_model(model, sess)

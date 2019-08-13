@@ -86,9 +86,9 @@ def catch_url_error(url_list):
             Check you wrote the url address correctly.""")
 
         # Error catch: Wrong formatted urls
-        if url_type != 'image/x-wav':
-            raise BadRequest("""Url wav format error:
-            Some urls were not in wav format.""")
+        if url_type.split('/')[0] != 'image':
+            raise BadRequest("""Url image format error:
+            Some urls were not in image format.""")
 
 
 def catch_localfile_error(file_list):
@@ -110,10 +110,20 @@ def predict_url(urls, merge=True):
     """
     Function to predict an url
     """
+
+    timestamp = datetime.now().strftime('%Y-%m-%d_%H%M%S')
+    timestamp_folder="/tmp/"+timestamp+"/"
+
+    try:
+        os.stat(timestamp_folder)
+    except:
+        os.mkdir(timestamp_folder)
+
     catch_url_error(urls)
-
-    urllib.request.urlretrieve(urls['urls'][0], '/tmp/image')
-
+    imagename=os.path.basename(urls['urls'][0])
+    urllib.request.urlretrieve(urls['urls'][0], '/tmp/'+timestamp+"/"+imagename)
+    
+    image_demo.posenet_image(timestamp)
 
     return 1
 

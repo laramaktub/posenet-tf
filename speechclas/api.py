@@ -179,23 +179,21 @@ def predict_data(images, merge=True):
 
 
 def format_prediction(labels):
-    d = {
-        "status": "ok",
-         "predictions": [],
-    }
 
-    print(labels[0]["output"])
-    
-#    class_names=conf["model_settings"]["wanted_words"]
- #   for label_id, prob in zip(labels, probabilities):
-  #      name = label_id
 
-   #     pred = {
-    #        "label": name,
-     #       "probability": float(prob)
-      #      }
-        
-       # d["predictions"].append(pred)
+    for label in labels:
+        d = {
+            "status": "ok",
+            "output": labels[0]["output"],
+            "predictions": [],
+        }
+
+        for thekey in sorted(label):
+            if thekey!="output":
+                pred={
+                thekey:label[thekey]
+                }
+                d["predictions"].append(pred)
     return d
 
 

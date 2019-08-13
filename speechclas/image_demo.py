@@ -13,15 +13,16 @@ import base64
 
 
 
-output_dir= "output"
-scale_factor=1.0
-image_dir= "images"
-model=101
 
-def posenet_image():
+def posenet_image(timestamp):
 
+
+    scale_factor=1.0
+    model=101
+    image_dir=os.path.join("images",timestamp,"/")
+    output_dir=os.path.join("output",timestamp,"/")
     dictoutput= []
-
+    print(output_dir)
 
     with tf.Session() as sess:
         model_cfg, model_outputs = load_model(model, sess)
@@ -82,7 +83,7 @@ def posenet_image():
     print(dictoutput)
     return dictoutput
 
-x=posenet_image()
-print("x 0  ---> ", x[0]["output"])
-jsonData=json.dumps(x)
+#x=posenet_image()
+#print("x 0  ---> ", x[0]["output"])
+#jsonData=json.dumps(x)
 

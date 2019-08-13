@@ -30,7 +30,7 @@ def get_base_dir():
         return os.path.abspath(os.path.join(homedir, base_dir))
 
 
-def get_audio_dir():
+def get_image_dir():
     img_dir = CONF['general']['data_dir']
     if os.path.isabs(img_dir):
         return img_dir
@@ -38,9 +38,9 @@ def get_audio_dir():
         return os.path.abspath(os.path.join(homedir, img_dir))
 
 
-def get_audio_url():
-    audio_url = CONF['general']['data_url']
-    return audio_url
+def get_image_url():
+    image_url = CONF['general']['data_url']
+    return image_url
 
 
 def get_splits_dir():
@@ -81,7 +81,7 @@ def get_predictions_dir():
 
 def get_dirs():
     return {'base dir': get_base_dir(),
-            'images dir': get_audio_dir(),
+            'images dir': get_image_dir(),
             'data splits dir': get_splits_dir(),
             'models_dir': get_models_dir(),
             'timestamped dir': get_timestamped_dir(),

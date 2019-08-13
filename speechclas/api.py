@@ -40,6 +40,9 @@ from speechclas.test_utils import predict
 from speechclas.train_runfile import train_fn
 from speechclas import image_demo
 
+CONF = config.conf_dict()
+
+
 # Mount NextCloud folders (if NextCloud is available)
 try:
     mount_nextcloud('ncplants:/data/dataset_files', paths.get_splits_dir())
@@ -209,16 +212,23 @@ def predict_data(images, merge=True):
     """
     Function to predict an image file
     """
+    timestamp = datetime.now().strftime('%Y-%m-%d_%H%M%S')
+    timestamp_folder=os.path.join("images",timestamp,"/")
+    try:
+        os.stat(timestamp_folder)
+    except:
+        os.mkdir(timestamp_folder)
+
     if not isinstance(images, list):
         images = [images]
     filenames = []
     for image in images:
 
         thename=image['files'].filename
-        thefile="images/"+thename
+        thefile=timestamp_folder+thename
         image['files'].save(thefile)
-    print("LLega hasta aqui")
-    image_demo.posenet_image()
+
+    image_demo.posenet_image(timestamp)
 
     #pred_lab, pred_prob =label_wav.predict(thefile, LABELS_FILE, MODEL_NAME, "wav_data:0","labels_softmax:0", 3)
     return 1
